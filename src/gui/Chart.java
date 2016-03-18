@@ -5,16 +5,29 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.print.PageFormat;
+import java.awt.print.PrinterException;
+import java.awt.print.PrinterJob;
 
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.EtchedBorder;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
+import org.jfree.chart.ChartTransferable;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.SegmentedTimeline;
+import org.jfree.chart.editor.ChartEditor;
+import org.jfree.chart.editor.ChartEditorManager;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
@@ -31,19 +44,184 @@ import org.jfree.data.xy.XYSeriesCollection;
 
 public class Chart {
 
-	public JPanel panel;
+	public JPanel panel, toolbar, graphpanel;
+	public JButton export, properties, showDataset, zoomIn, zoomOut, print, copyToClipboard;
 	public static JFreeChart current;
-	
+	public static JChartPanel chartPanel;
+
 	public Chart(){
 		init();
 	}
 
 	public void init(){
-		panel = new JPanel();
-		panel.setLayout(new FlowLayout());
-		panel.add(new JLabel("Click a button from the left options to see the chart"));
-		panel.setSize(new Dimension(400, 300));
-		panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Chart"));
+		panel = new JPanel(new BorderLayout());
+		toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		graphpanel = new JPanel();
+		graphpanel.setLayout(new FlowLayout());
+		graphpanel.add(new JLabel("Click a button from the left options to see the chart"));
+		graphpanel.setSize(new Dimension(400, 300));
+		graphpanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Chart"));
+		panel.add(graphpanel, BorderLayout.CENTER);
+		panel.add(toolbar, BorderLayout.NORTH);
+
+		initToolbar();
+		addToolListeners();
+	}
+
+	public void initToolbar(){
+
+		export = new JButton(ImageLoader.loadImage("images/export.png"));
+		properties = new JButton(ImageLoader.loadImage("images/properties-icon.png"));
+		showDataset = new JButton(ImageLoader.loadImage("images/dataset.png"));
+		zoomIn = new JButton(ImageLoader.loadImage("images/zoom-in.png"));
+		zoomOut = new JButton(ImageLoader.loadImage("images/zoom-out.png"));
+		print = new JButton(ImageLoader.loadImage("images/print.png"));
+		copyToClipboard = new JButton(ImageLoader.loadImage("images/copy.gif"));
+
+		export.setToolTipText("Export the graph to image or pdf");
+		properties.setToolTipText("Edit the properties of the current chart");
+		showDataset.setToolTipText("Show the dataset of the graph");
+		zoomIn.setToolTipText("Zoom in the graph");
+		zoomOut.setToolTipText("Zoom out the graph");
+		print.setToolTipText("print the graph");
+		copyToClipboard.setToolTipText("copy the graph to the clipboard as an image");
+
+		toolbar.add(export);
+		toolbar.add(properties);
+		toolbar.add(showDataset);
+		toolbar.add(zoomIn);
+		toolbar.add(zoomOut);
+		toolbar.add(print);
+		toolbar.add(copyToClipboard);
+
+	}
+
+	public void addToolListeners(){
+
+		export.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+
+				if(current == null){
+					JOptionPane.showMessageDialog(MainFrame.frame, "There is no graph opened currently!", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+
+				new ExportDialog().show();
+
+			}
+		});
+		
+		properties.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+				if(current == null){
+					JOptionPane.showMessageDialog(MainFrame.frame, "There is no graph opened currently!", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				
+				
+				 ChartEditor editor = ChartEditorManager.getChartEditor(current);
+			        int result = JOptionPane.showConfirmDialog(MainFrame.frame, editor,
+			                "Edit Chart Properties",
+			                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+			        if (result == JOptionPane.OK_OPTION) {
+			            editor.updateChart(current);
+			        }
+			}
+		});
+
+		showDataset.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+
+				if(current == null){
+					JOptionPane.showMessageDialog(MainFrame.frame, "There is no graph opened currently!", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+
+				DataViewer v = new DataViewer();
+				v.setData();
+				v.show();
+
+			}
+		});
+
+		zoomIn.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(current == null){
+					JOptionPane.showMessageDialog(MainFrame.frame, "There is no graph opened currently!", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+
+				chartPanel.zoomInBoth(-1, -1);
+			}
+		});
+
+		zoomOut.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(current == null){
+					JOptionPane.showMessageDialog(MainFrame.frame, "There is no graph opened currently!", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+
+				chartPanel.zoomOutBoth(-1, -1);
+			}
+		});
+
+		print.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(current == null){
+					JOptionPane.showMessageDialog(MainFrame.frame, "There is no graph opened currently!", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				
+				PrinterJob job = PrinterJob.getPrinterJob();
+		        PageFormat pf = job.defaultPage();
+		        PageFormat pf2 = job.pageDialog(pf);
+		        if (pf2 != pf) {
+		            job.setPrintable(chartPanel, pf2);
+		            if (job.printDialog()) {
+		                try {
+		                    job.print();
+		                }
+		                catch (PrinterException ex) {
+		                    JOptionPane.showMessageDialog(chartPanel, e);
+		                }
+		            }
+		        }
+
+
+
+			}
+		});
+
+		copyToClipboard.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(current == null){
+					JOptionPane.showMessageDialog(MainFrame.frame, "There is no graph opened currently!", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+
+				Clipboard systemClipboard= Toolkit.getDefaultToolkit().getSystemClipboard();
+				ChartTransferable selection = new ChartTransferable(current,chartPanel.getWidth(), chartPanel.getHeight());
+				systemClipboard.setContents(selection, null);
+				
+				JOptionPane.showMessageDialog(chartPanel, "Successfully copied the chart to the clipboard!");
+			}
+		});
 	}
 
 	public void createPieChart(){
@@ -55,11 +233,13 @@ public class Chart {
 		dataset.setValue( "Nokia Lumia" , new Double( 10 ) );
 
 		current = ChartFactory.createPieChart("Mobile Sales",dataset,true,true,false);
-		panel.removeAll();
-		panel.setLayout(new BorderLayout());
-		panel.add(new ChartPanel(current), BorderLayout.CENTER);
-		panel.repaint();
-		panel.revalidate();
+		chartPanel = new JChartPanel(current);
+
+		graphpanel.removeAll();
+		graphpanel.setLayout(new BorderLayout());
+		graphpanel.add(chartPanel, BorderLayout.CENTER);
+		graphpanel.repaint();
+		graphpanel.revalidate();
 
 		BottomPanel.label.setText("Pie Chart");
 	}
@@ -92,11 +272,13 @@ public class Chart {
 		dataset.addValue( 6.0 , ford , safety );
 
 		current = ChartFactory.createBarChart("Cars people like","Category","Score",dataset,PlotOrientation.HORIZONTAL,true, true, false);
-		panel.removeAll();
-		panel.setLayout(new BorderLayout());
-		panel.add(new ChartPanel(current), BorderLayout.CENTER);
-		panel.repaint();
-		panel.revalidate();
+		chartPanel = new JChartPanel(current);
+
+		graphpanel.removeAll();
+		graphpanel.setLayout(new BorderLayout());
+		graphpanel.add(chartPanel, BorderLayout.CENTER);
+		graphpanel.repaint();
+		graphpanel.revalidate();
 
 		BottomPanel.label.setText("Bar Chart");
 	}
@@ -116,11 +298,14 @@ public class Chart {
 				dataset,
 				PlotOrientation.VERTICAL,
 				true,true,false);
-		panel.removeAll();
-		panel.setLayout(new BorderLayout());
-		panel.add(new ChartPanel(current), BorderLayout.CENTER);
-		panel.repaint();
-		panel.revalidate();
+
+		chartPanel = new JChartPanel(current);
+
+		graphpanel.removeAll();
+		graphpanel.setLayout(new BorderLayout());
+		graphpanel.add(chartPanel, BorderLayout.CENTER);
+		graphpanel.repaint();
+		graphpanel.revalidate();
 
 		BottomPanel.label.setText("Line Chart");
 
@@ -161,13 +346,16 @@ public class Chart {
 		renderer.setSeriesStroke( 0 , new BasicStroke( 4.0f ) );
 		renderer.setSeriesStroke( 1 , new BasicStroke( 3.0f ) );
 		renderer.setSeriesStroke( 2 , new BasicStroke( 2.0f ) );
-		plot.setRenderer( renderer ); 
+		plot.setRenderer( renderer );
 
-		panel.removeAll();
-		panel.setLayout(new BorderLayout());
-		panel.add(new ChartPanel(current), BorderLayout.CENTER);
-		panel.repaint();
-		panel.revalidate();
+		chartPanel = new JChartPanel(current);
+
+
+		graphpanel.removeAll();
+		graphpanel.setLayout(new BorderLayout());
+		graphpanel.add(chartPanel, BorderLayout.CENTER);
+		graphpanel.repaint();
+		graphpanel.revalidate();
 
 		BottomPanel.label.setText("XY line Chart");
 	}
@@ -190,6 +378,8 @@ public class Chart {
 				PlotOrientation.HORIZONTAL,                    
 				true, true, false);
 
+		chartPanel = new JChartPanel(current);
+
 		XYPlot xyplot = ( XYPlot )current.getPlot( );                 
 		xyplot.setForegroundAlpha( 0.65F );                 
 		XYItemRenderer xyitemrenderer = xyplot.getRenderer( );
@@ -201,11 +391,11 @@ public class Chart {
 		numberaxis1.setLowerMargin( 0.8 );                 
 		numberaxis1.setUpperMargin( 0.9 );
 
-		panel.removeAll();
-		panel.setLayout(new BorderLayout());
-		panel.add(new ChartPanel(current), BorderLayout.CENTER);
-		panel.repaint();
-		panel.revalidate();
+		graphpanel.removeAll();
+		graphpanel.setLayout(new BorderLayout());
+		graphpanel.add(chartPanel, BorderLayout.CENTER);
+		graphpanel.repaint();
+		graphpanel.revalidate();
 
 		BottomPanel.label.setText("Bubble Chart");
 	}
@@ -230,19 +420,21 @@ public class Chart {
 		}
 
 		current =  ChartFactory.createTimeSeriesChart(             
-			      "Computing Test", 
-			      "Seconds",              
-			      "Value",              
-			      new TimeSeriesCollection(series),             
-			      false,              
-			      false,              
-			      false);
-		
-		panel.removeAll();
-		panel.setLayout(new BorderLayout());
-		panel.add(new ChartPanel(current), BorderLayout.CENTER);
-		panel.repaint();
-		panel.revalidate();
+				"Computing Test", 
+				"Seconds",              
+				"Value",              
+				new TimeSeriesCollection(series),             
+				false,              
+				false,              
+				false);
+
+		chartPanel = new JChartPanel(current);
+
+		graphpanel.removeAll();
+		graphpanel.setLayout(new BorderLayout());
+		graphpanel.add(chartPanel, BorderLayout.CENTER);
+		graphpanel.repaint();
+		graphpanel.revalidate();
 
 		BottomPanel.label.setText("Time Series Chart");
 	}
