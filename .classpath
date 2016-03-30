@@ -6,5 +6,13 @@
 	<classpathentry kind="lib" path="lib/jcommon.jar"/>
 	<classpathentry kind="lib" path="lib/jfreechart.jar"/>
 	<classpathentry kind="lib" path="lib/kuxlib.jar"/>
+	<classpathentry kind="lib" path="lib/itextpdf-5.5.9.jar"/>
+	<classpathentry kind="lib" path="lib/batik-awt-util-1.8.jar"/>
+	<classpathentry kind="lib" path="lib/batik-dom-1.8.jar"/>
+	<classpathentry kind="lib" path="lib/batik-svggen-1.8.jar"/>
+	<classpathentry kind="lib" path="lib/batik-util-1.8.jar"/>
+	<classpathentry kind="lib" path="lib/xml-apis-1.4.01.jar"/>
+	<classpathentry kind="lib" path="lib/batik-ext-1.8.jar"/>
+	<classpathentry kind="lib" path="lib/batik-xml-1.8.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
