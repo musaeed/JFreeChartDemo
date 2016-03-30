@@ -75,7 +75,6 @@ public class ExportDialog {
 					filename = fd.getFiles()[0].getAbsolutePath();
 
 				} catch(Exception ee){
-					JOptionPane.showMessageDialog(MainFrame.frame, ee);
 					return;
 				}
 
@@ -111,7 +110,6 @@ public class ExportDialog {
 					filename = fd.getFiles()[0].getAbsolutePath();
 
 				} catch(Exception ee){
-					JOptionPane.showMessageDialog(MainFrame.frame, ee);
 					return;
 				}
 
@@ -148,7 +146,6 @@ public class ExportDialog {
 					filename = fd.getFiles()[0].getAbsolutePath();
 
 				} catch(Exception ee){
-					JOptionPane.showMessageDialog(MainFrame.frame, ee);
 					return;
 				}
 
@@ -193,7 +190,6 @@ public class ExportDialog {
 					filename = fd.getFiles()[0].getAbsolutePath();
 
 				} catch(Exception ee){
-					JOptionPane.showMessageDialog(MainFrame.frame, ee);
 					return;
 				}
 
